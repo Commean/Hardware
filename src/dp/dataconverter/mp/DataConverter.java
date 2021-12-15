@@ -24,6 +24,7 @@ public class DataConverter {
 			boolean connected = sendTrafficDataViaLTE(trafficData);
 			if (!connected) {
 				System.out.println("ERROR! Connection failed!");
+				
 			}
 		}
 
