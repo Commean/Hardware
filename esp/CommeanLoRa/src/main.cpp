@@ -50,7 +50,14 @@ const lmic_pinmap lmic_pins = {
     .nss = 5,
     .rxtx = LMIC_UNUSED_PIN,
     .rst = 14,
-    .dio = {2},
+    // LoRa mode
+    // DIO0: TxDone and RxDone
+    // DIO1: RxTimeout
+
+    // FSK mode
+    // DIO0: PayloadReady and PacketSent
+    // DIO2: TimeOut
+    .dio = {2, 10, LMIC_UNUSED_PIN},
 };
 
 void printHex2(unsigned v) {
@@ -196,7 +203,7 @@ void onEvent (ev_t ev) {
 void setup() {
     Serial.begin(9600);
     Serial.println(F("Starting"));
-
+    LMIC_setupBand(4, 100, 100);
     #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
