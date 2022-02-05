@@ -37,6 +37,9 @@
 #include <SPI.h>
 #include "Credentials.h"
 
+#define MAX_CHANNELS 16
+#define MAX_BANDS 4
+#define LIMIT_CHANNELS 0b1000
 
 static uint8_t mydata[] = "Hello, world!";
 static osjob_t sendjob;
@@ -57,7 +60,7 @@ const lmic_pinmap lmic_pins = {
     // FSK mode
     // DIO0: PayloadReady and PacketSent
     // DIO2: TimeOut
-    .dio = {2, 10, LMIC_UNUSED_PIN},
+    .dio = {2, 4, LMIC_UNUSED_PIN},
 };
 
 void printHex2(unsigned v) {
@@ -203,7 +206,6 @@ void onEvent (ev_t ev) {
 void setup() {
     Serial.begin(9600);
     Serial.println(F("Starting"));
-    LMIC_setupBand(4, 100, 100);
     #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
@@ -215,6 +217,7 @@ void setup() {
     os_init();
     // Reset the MAC state. Session and pending data transfers will be discarded.
     LMIC_reset();
+    LMIC_setupBand(1, 30, 30);
 
     // Start job (sending automatically starts OTAA too)
     do_send(&sendjob);
