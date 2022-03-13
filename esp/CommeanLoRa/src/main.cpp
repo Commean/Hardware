@@ -36,6 +36,7 @@
 #include <hal/hal.h>
 #include <SPI.h>
 #include "Credentials.h"
+#include "pinmap-v2.h"
 
 #define MAX_CHANNELS 16
 #define MAX_BANDS 4
@@ -48,20 +49,6 @@ static osjob_t sendjob;
 // cycle limitations).
 const unsigned TX_INTERVAL = 60;
 
-// Pin mapping
-const lmic_pinmap lmic_pins = {
-    .nss = 5,
-    .rxtx = LMIC_UNUSED_PIN,
-    .rst = 14,
-    // LoRa mode
-    // DIO0: TxDone and RxDone
-    // DIO1: RxTimeout
-
-    // FSK mode
-    // DIO0: PayloadReady and PacketSent
-    // DIO2: TimeOut
-    .dio = {2, 4, LMIC_UNUSED_PIN},
-};
 
 void printHex2(unsigned v) {
     v &= 0xff;
