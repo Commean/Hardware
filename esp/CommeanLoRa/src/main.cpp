@@ -36,32 +36,37 @@
 #include <hal/hal.h>
 #include <SPI.h>
 #include "Credentials.h"
+#include "pinmap-v2.h"
+#include <ArduinoJson.h>
 
 #define MAX_CHANNELS 16
 #define MAX_BANDS 4
 #define LIMIT_CHANNELS 0b1000
 
-static uint8_t mydata[] = "{\"timestamp\" : \"2022-02-08 09:42:15.0000\",\"trucks\" : 2,\"cars\" : 0,\"averageTimeInPicture\" : 13}";
 static osjob_t sendjob;
 
 // Schedule TX every this many seconds (might become longer due to duty
 // cycle limitations).
 const unsigned TX_INTERVAL = 60;
 
-// Pin mapping
-const lmic_pinmap lmic_pins = {
-    .nss = 5,
-    .rxtx = LMIC_UNUSED_PIN,
-    .rst = 14,
-    // LoRa mode
-    // DIO0: TxDone and RxDone
-    // DIO1: RxTimeout
+StaticJsonDocument<200> generateData()
+{
+    StaticJsonDocument<200> doc;
 
-    // FSK mode
-    // DIO0: PayloadReady and PacketSent
-    // DIO2: TimeOut
-    .dio = {2, 4, LMIC_UNUSED_PIN},
-};
+    doc["atip"] = random(1000) / 100.0;
+    doc["id"] = "06ac245d-5a79-46d2-b8c2-817975f06e44";
+    doc["time"] = 1647154770 + millis() / 1000.0;
+
+    JsonObject count = doc.createNestedObject("count");
+    count["car"] = random(30);
+    count["truck"] = random(30);
+    count["bus"] = random(30);
+    count["motorbike"] = random(30);
+
+    serializeJsonPretty(doc, Serial);
+    Serial.println();
+    return doc;
+}
 
 void printHex2(unsigned v)
 {
@@ -81,7 +86,12 @@ void do_send(osjob_t *j)
     else
     {
         // Prepare upstream data transmission at the next possible time.
-        LMIC_setTxData2(1, mydata, sizeof(mydata) - 1, 0);
+        char data[200] = "";
+        StaticJsonDocument<200> doc = generateData();
+        serializeJson(doc, data);
+
+        // Serial.println(data);
+        LMIC_setTxData2(1, (xref2u1_t)data, sizeof(data) - 1, 0);
         Serial.println(F("Packet queued"));
     }
     // Next TX is scheduled after TX_COMPLETE event.
@@ -143,13 +153,13 @@ void onEvent(ev_t ev)
         LMIC_setLinkCheckMode(0);
         break;
     /*
-        || This event is defined but not used in the code. No
-        || point in wasting codespace on it.
-        ||
-        || case EV_RFU1:
-        ||     Serial.println(F("EV_RFU1"));
-        ||     break;
-        */
+    || This event is defined but not used in the code. No
+    || point in wasting codespace on it.
+    ||
+    || case EV_RFU1:
+    ||     Serial.println(F("EV_RFU1"));
+    ||     break;
+    */
     case EV_JOIN_FAILED:
         Serial.println(F("EV_JOIN_FAILED"));
         break;
@@ -186,13 +196,13 @@ void onEvent(ev_t ev)
         Serial.println(F("EV_LINK_ALIVE"));
         break;
     /*
-        || This event is defined but not used in the code. No
-        || point in wasting codespace on it.
-        ||
-        || case EV_SCAN_FOUND:
-        ||    Serial.println(F("EV_SCAN_FOUND"));
-        ||    break;
-        */
+    || This event is defined but not used in the code. No
+    || point in wasting codespace on it.
+    ||
+    || case EV_SCAN_FOUND:
+    ||    Serial.println(F("EV_SCAN_FOUND"));
+    ||    break;
+    */
     case EV_TXSTART:
         Serial.println(F("EV_TXSTART"));
         break;
@@ -217,6 +227,8 @@ void setup()
 {
     Serial.begin(9600);
     Serial.println(F("Starting"));
+    randomSeed(analogRead(0));
+
 #ifdef VCC_ENABLE
     // For Pinoccio Scout boards
     pinMode(VCC_ENABLE, OUTPUT);
