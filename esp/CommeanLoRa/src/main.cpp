@@ -86,12 +86,11 @@ void do_send(osjob_t *j)
     else
     {
         // Prepare upstream data transmission at the next possible time.
-        char data[200] = "";
         StaticJsonDocument<200> doc = generateData();
-        serializeJson(doc, data);
-
-        // Serial.println(data);
-        LMIC_setTxData2(1, (xref2u1_t)data, sizeof(data) - 1, 0);
+        String output;
+        serializeJson(doc, output);
+        // Serial.println(output);
+        LMIC_setTxData2(1, (xref2u1_t)output.c_str(), output.length(), 0);
         Serial.println(F("Packet queued"));
     }
     // Next TX is scheduled after TX_COMPLETE event.
